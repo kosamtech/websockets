@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Websocket Echo Demo</title>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="wrapper">
+    <!-- headers -->
+    <h1>Websocket Echo Demo</h1>
+    <button id="open-ws" class="submit">Open WS</button>
+    <div id="status">Status: Not connected</div>
+
+    <!-- message table -->
+    <ul id="table"></ul>
+
+    <!-- form -->
+    <form id="form">
+      <textarea id="message" placeholder="Write your message here..." required></textarea>
+      <button class="submit">Send Message</button>
+      <button id="close-ws">Close Connection</button>
+    </form>
+
+  </div>
+
+  <script>
+    let openWSBtn = document.getElementById("open-ws");
+    let closeWSBtn = document.getElementById("close-ws");
+    let form = document.getElementById("form");
+    let socketStatus = document.getElementById("status");
+    let table = document.getElementById("table");
+    let message = document.getElementById("message");
+
+
+    openWSBtn.addEventListener("click", () => {
+
+      // disable the button
+      openWSBtn.disabled = true;
+      openWSBtn.style.background = 'gray';
+      openWSBtn.style.pointerEvents = 'none';
+      openWSBtn.textContent = 'Disabled';
+
+      // change the status text
+      socketStatus.textContent = 'Connecting...'
+
+      // open websocket connection
+      let url = "ws://127.0.0.1:8080";
+      let socket = new WebSocket(url);
+      console.log("Socket connecting status is: ", socket.readyState);
+
+      // OPEN
+      socket.onopen = (ev) => {
+        console.log("Socket connecting status is: ", socket.readyState);
+        socketStatus.innerHTML = `Connected to: ${ev.currentTarget.url}`
+        socketStatus.className = "open";
+        form.className = "show";
+      }
+
+      // MESSAGE
+      socket.onmessage = (message) => {
+        let msg = message.data;
+        table.innerHTML += `<li><span>Received:</span> ${msg}</li>`
+      }
+
+      // CLOSE
+      socket.onclose = (ev) => {
+        console.log("onclose", ev)
+        console.log("Socket connecting status is: ", socket.readyState);
+        socketStatus.className = "closed"
+
+        switch (ev.code) {
+          case 1006:
+            socketStatus.innerHTML = "No go my friend.";
+            table.innerHTML += `<li class="received closed"><span>ERROR:</span>something is wrong with your connection </li>`;
+            break;
+          case 1001:
+            socketStatus.innerHTML = `Disconnected. ${ev.reason}`;
+            table.innerHTML = "";
+            break;
+          default:
+            socketStatus.innerHTML = `You disconnected from WebSockets. ${ev.reason}`;
+            table.innerHTML += `<li class="received closed"><span>CLOSED:</span>You closed the connection</li>`;
+            break;
+        }
+
+        message.removeAttribute("required")
+        form.classList.remove("show");
+        openWSBtn.disabled = false;
+        openWSBtn.style.background = "",
+        openWSBtn.style.pointerEvents = "";
+        openWSBtn.textContent = "Open WS";
+      }
+
+      // ERROR
+      socket.onerror = (err) => {
+        console.log(err)
+        socketStatus.textContent = 'Error'
+        socketStatus.className = "closed"
+      }
+
+      // SEND
+      form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+
+        if (socket.readyState === 1) {
+          let userText = message.value;
+          socket.send(userText);
+
+          // update our table
+          table.innerHTML += `<li class="sent"><span>SENT:</span>${userText}</li>`;
+          message.value = "";
+
+        }
+      });
+
+      // close method
+      closeWSBtn.addEventListener("click", () => {
+        // close the websocket connection
+        socket.close();
+        console.log("Socket connecting status is: ", socket.readyState);
+
+        message.removeAttribute("required")
+        form.classList.remove("show");
+        openWSBtn.disabled = false;
+        openWSBtn.style.background = "",
+        openWSBtn.style.pointerEvents = "";
+        openWSBtn.textContent = "Open WS";
+      })
+
+    });
+
+  </script>
+</body>
+</html>

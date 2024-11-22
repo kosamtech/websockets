@@ -1,0 +1,20 @@
+{
+  "name": "websockets",
+  "version": "1.0.0",
+  "description": "websocket API project",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "websocket",
+    "native",
+    "api"
+  ],
+  "author": "Kosam Omollo",
+  "license": "MIT",
+  "dependencies": {
+    "websocket": "^1.0.35"
+  }
+}
